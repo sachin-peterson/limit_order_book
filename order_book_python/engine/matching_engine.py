@@ -412,28 +412,24 @@ class OrderBook:
         # Update the order index
         del self.order_index[order_node.order.order_id]
 
-    def emit_event(
-            self,
-            event_type: EventType,
-            details: dict[str, object]
-        ) -> Event:
-            """
-            Creates and stores an engine event
-            """
-            event_details = {
-                "symbol": self.instrument.symbol,
-                **details
-            }
+    def emit_event(self, event_type: EventType, details: dict[str, object]) -> Event:
+        """
+        Creates and stores an engine event
+        """
+        event_details = {
+            "symbol": self.instrument.symbol,
+            **details
+        }
 
-            event = Event(
-                sequence=self.generate_event_sequence(),
-                timestamp=self.generate_timestamp(),
-                event_type=event_type,
-                details=event_details
-            )
+        event = Event(
+            sequence=self.generate_event_sequence(),
+            timestamp=self.generate_timestamp(),
+            event_type=event_type,
+            details=event_details
+        )
 
-            self.events.append(event)
-            return event
+        self.events.append(event)
+        return event
     
     def get_order_details(self, order: Order) -> dict[str, object]:
         """
