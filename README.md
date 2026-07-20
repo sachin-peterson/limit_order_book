@@ -226,7 +226,7 @@ The current simulator is a synthetic baseline. It is not yet calibrated to empir
 
 - Single-threaded and in memory
 - Unbalanced price trees
-- Integer prices and order quantitiesq
+- Integer prices and order quantities
 - No networking, persistence or exchange gateway
 - Synthetic order flow rather than empirically calibrated order flow
 - Intended for study and experimentation rather than production trading
