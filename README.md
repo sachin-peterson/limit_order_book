@@ -5,7 +5,7 @@
 
 A from-scratch exchange-style limit order book, matching engine, and stochastic simulator.
 
-![Limit order book dashboard](docs/assets/dashboard.gif)
+![Limit order book dashboard](docs/dashboard.gif)
 
 The reference implementation is written in Python. A low-latency Rust implementation of the core matching engine is in progress. 
 
