@@ -1,5 +1,8 @@
 # Limit Order Book
 
+[![CI](https://github.com/sachin-peterson/limit_order_book/actions/workflows/ci.yml/badge.svg)](https://github.com/sachin-peterson/limit_order_book/actions/workflows/ci.yml)
+
+
 A from-scratch exchange-style limit order book, matching engine, and stochastic simulator.
 
 ![Limit order book dashboard](docs/assets/dashboard.gif)
