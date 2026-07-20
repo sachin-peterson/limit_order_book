@@ -539,39 +539,124 @@ class OrderBook:
         return orders
 
     # SNAPSHOT FUNCTIONS
-    def get_side_snapshot(self, side: Side) -> list[dict[str, object]]:
-        book_side = self.bids if side is Side.BUY else self.asks
-
-        snapshot: list[dict[str, object]] = []
-
-        for price_level in book_side.get_price_levels_in_order():
-            snapshot.append(
-                {
-                    "side": side.value,
-                    "price": price_level.price,
-                    "total_size": price_level.total_size,
-                    "order_count": price_level.order_count
-                }
-            )
-
-        return snapshot
-
     def get_book_snapshot(self) -> dict[str, object]:
-        best_bid = self.get_best_bid()
-        best_ask = self.get_best_ask()
+        bid_levels = self.bids.get_price_levels_in_order()
+        ask_levels = self.asks.get_price_levels_in_order()
+
+        bid_size = sum(
+            level.total_size
+            for level in bid_levels
+        )
+
+        ask_size = sum(
+            level.total_size
+            for level in ask_levels
+        )
+
+        best_bid = self.get_best_bid_price()
+        best_ask = self.get_best_ask_price()
+
+        spread = None
+
+        if best_bid is not None and best_ask is not None:
+            spread = best_ask - best_bid
 
         return {
-            "timestamp_ns": self.generate_timestamp(),
             "symbol": self.instrument.symbol,
-            "best_bid_price": self.get_best_bid_price(),
-            "best_bid_size": None if best_bid is None else best_bid.total_size,
-            "best_ask_price": self.get_best_ask_price(),
-            "best_ask_size": None if best_ask is None else best_ask.total_size,
-            "spread": self.get_bid_ask_spread(),
+            "best_bid": best_bid,
+            "best_ask": best_ask,
+            "spread": spread,
             "mid_price": self.get_mid_price(),
-            "active_order_count": len(self.order_index),
-            "bids": self.get_side_snapshot(Side.BUY),
-            "asks": self.get_side_snapshot(Side.SELL)
+            "bid_levels": len(bid_levels),
+            "ask_levels": len(ask_levels),
+            "bid_size": bid_size,
+            "ask_size": ask_size,
+            "active_orders": len(self.order_index),
+            "trade_count": self.next_trade_id - 1,
+            "event_count": len(self.events)
+        }
+
+    def get_side_snapshot(self, side: Side, depth: int | None = None) -> dict[str, object]:
+        if not isinstance(side, Side):
+            raise TypeError("Side must be a Side value")
+
+        if depth is not None:
+            if not isinstance(depth, int) or depth <= 0:
+                raise ValueError("Depth must be a positive integer")
+
+        book_side = self.bids if side is Side.BUY else self.asks
+        price_levels = book_side.get_price_levels_in_order()
+
+        total_size = sum(
+            level.total_size
+            for level in price_levels
+        )
+
+        order_count = sum(
+            level.order_count
+            for level in price_levels
+        )
+
+        visible_levels = (
+            price_levels
+            if depth is None
+            else price_levels[:depth]
+        )
+
+        levels = [
+            {
+                "price": level.price,
+                "total_size": level.total_size,
+                "order_count": level.order_count
+            }
+            for level in visible_levels
+        ]
+
+        return {
+            "side": side.value,
+            "best_price": book_side.get_best_price(),
+            "level_count": len(price_levels),
+            "order_count": order_count,
+            "total_size": total_size,
+            "levels": levels
+        }
+
+    def get_price_level_snapshot(self, side: Side, price: int) -> dict[str, object] | None:
+        if not isinstance(side, Side):
+            raise TypeError("Side must be a Side value")
+
+        if not isinstance(price, int) or price <= 0:
+            raise ValueError("Price must be a positive integer")
+
+        book_side = self.bids if side is Side.BUY else self.asks
+        tree_node = book_side.get_price_level(price)
+
+        if tree_node is None:
+            return None
+
+        price_level = tree_node.price_level
+        orders: list[dict[str, object]] = []
+
+        current = price_level.head
+
+        while current is not None:
+            order = current.order
+
+            orders.append({
+                "order_id": order.order_id,
+                "client_id": order.client_id,
+                "size": order.size,
+                "timestamp": order.timestamp
+            })
+
+            current = current.next
+
+        return {
+            "side": side.value,
+            "price": price_level.price,
+            "total_size": price_level.total_size,
+            "order_count": price_level.order_count,
+            "orders": orders
         }
 
     def is_empty(self) -> bool:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Callable
 
 from order_book_python.engine.matching_engine import OrderBook
@@ -12,27 +14,32 @@ from .generator import SimulationRequest, StochasticRequestGenerator
 
 class SimulationRunner:
     """
-    Runs the stochastic order-book simulation.
+    Runs a stochastic order-book simulation.
 
     Attributes:
-    - validate_after_each_request: whether to validate book after every request
+    - validate_after_each_request: whether the book is validated after request
     - clock: optional clock passed to the matching engine
     """
+
     def __init__(
         self,
         validate_after_each_request: bool = False,
-        clock: Callable[[], int] | None = None,
+        clock: Callable[[], int] | None = None
     ) -> None:
         self.validate_after_each_request = validate_after_each_request
         self.clock = clock
 
     def run(
-        self, 
+        self,
         instrument: Instrument,
         config: SimulationConfig,
-        on_event: Callable[[Event], None] | None = None
+        on_event: Callable[[Event], None] | None = None,
+        on_step: Callable[[OrderBook], None] | None = None
     ) -> OrderBook:
-        order_book = OrderBook(instrument=instrument, clock=self.clock)
+        order_book = OrderBook(
+            instrument=instrument,
+            clock=self.clock
+        )
         generator = StochasticRequestGenerator(config)
 
         for _ in range(config.action_count):
@@ -44,22 +51,24 @@ class SimulationRunner:
             except ValueError:
                 pass
 
+            if self.validate_after_each_request:
+                validate_state(order_book)
+
             new_events = order_book.events[event_start:]
 
             if on_event is not None:
                 for event in new_events:
                     on_event(event)
 
-            if self.validate_after_each_request:
-                validate_state(order_book)
+            if on_step is not None:
+                on_step(order_book)
+
+        if on_step is not None:
+            on_step(order_book)
 
         return order_book
-    
-    def process_request(
-        self,
-        order_book: OrderBook,
-        request: SimulationRequest
-    ) -> None:
+
+    def process_request(self, order_book: OrderBook, request: SimulationRequest) -> None:
         if isinstance(request, NewOrderRequest):
             order_book.submit_order(request)
             return

@@ -1,7 +1,7 @@
 import unittest
 
-from order_book_python.engine.types.enums import EventType, OrderStatus, Side, TimeInForce
-from order_book_python.engine.types.requests import CancelOrderRequest, ModifyOrderRequest
+from order_book_python.engine.types.enums import EventType, OrderStatus, Side, TimeInForce, OrderType
+from order_book_python.engine.types.requests import CancelOrderRequest, ModifyOrderRequest, NewOrderRequest
 
 from .helpers import create_order_book, limit_request, market_request
 
@@ -707,37 +707,95 @@ class TestBookQueries(unittest.TestCase):
 
     def test_side_snapshot_is_best_to_worst(self) -> None:
         self.book.submit_order(
-            limit_request(1, 10, Side.BUY, 99, 10)
-        )
-        self.book.submit_order(
-            limit_request(2, 20, Side.BUY, 101, 20)
-        )
-        self.book.submit_order(
-            limit_request(3, 30, Side.BUY, 100, 30)
+            NewOrderRequest(
+                request_id=1,
+                client_id=1,
+                side=Side.BUY,
+                order_type=OrderType.LIMIT,
+                time_in_force=TimeInForce.GTC,
+                price=99,
+                size=10
+            )
         )
 
-        snapshot = self.book.get_side_snapshot(Side.BUY)
+        self.book.submit_order(
+            NewOrderRequest(
+                request_id=2,
+                client_id=1,
+                side=Side.BUY,
+                order_type=OrderType.LIMIT,
+                time_in_force=TimeInForce.GTC,
+                price=101,
+                size=20
+            )
+        )
 
-        self.assertEqual([level["price"] for level in snapshot], [101, 100, 99])
+        self.book.submit_order(
+            NewOrderRequest(
+                request_id=3,
+                client_id=1,
+                side=Side.BUY,
+                order_type=OrderType.LIMIT,
+                time_in_force=TimeInForce.GTC,
+                price=100,
+                size=30
+            )
+        )
+
+        snapshot = self.book.get_side_snapshot(
+            side=Side.BUY
+        )
+
+        levels = snapshot["levels"]
+
+        self.assertEqual(
+            [level["price"] for level in levels],
+            [101, 100, 99]
+        )
+
+        self.assertEqual(snapshot["side"], Side.BUY.value)
+        self.assertEqual(snapshot["best_price"], 101)
+        self.assertEqual(snapshot["level_count"], 3)
+        self.assertEqual(snapshot["order_count"], 3)
+        self.assertEqual(snapshot["total_size"], 60)
+
 
     def test_book_snapshot_contains_top_of_book(self) -> None:
         self.book.submit_order(
-            limit_request(1, 10, Side.BUY, 100, 10)
+            NewOrderRequest(
+                request_id=1,
+                client_id=1,
+                side=Side.BUY,
+                order_type=OrderType.LIMIT,
+                time_in_force=TimeInForce.GTC,
+                price=100,
+                size=10
+            )
         )
+
         self.book.submit_order(
-            limit_request(2, 20, Side.SELL, 105, 20)
+            NewOrderRequest(
+                request_id=2,
+                client_id=1,
+                side=Side.SELL,
+                order_type=OrderType.LIMIT,
+                time_in_force=TimeInForce.GTC,
+                price=102,
+                size=20
+            )
         )
 
         snapshot = self.book.get_book_snapshot()
 
-        self.assertEqual(snapshot["symbol"], "TEST")
-        self.assertEqual(snapshot["best_bid_price"], 100)
-        self.assertEqual(snapshot["best_bid_size"], 10)
-        self.assertEqual(snapshot["best_ask_price"], 105)
-        self.assertEqual(snapshot["best_ask_size"], 20)
-        self.assertEqual(snapshot["spread"], 5)
-        self.assertEqual(snapshot["mid_price"], 102.5)
-        self.assertEqual(snapshot["active_order_count"], 2)
+        self.assertEqual(snapshot["best_bid"], 100)
+        self.assertEqual(snapshot["best_ask"], 102)
+        self.assertEqual(snapshot["spread"], 2)
+        self.assertEqual(snapshot["mid_price"], 101.0)
+        self.assertEqual(snapshot["bid_levels"], 1)
+        self.assertEqual(snapshot["ask_levels"], 1)
+        self.assertEqual(snapshot["bid_size"], 10)
+        self.assertEqual(snapshot["ask_size"], 20)
+        self.assertEqual(snapshot["active_orders"], 2)
 
 
 class TestEventsAndIdentifiers(unittest.TestCase):

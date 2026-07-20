@@ -2,7 +2,6 @@ import unittest
 
 from order_book_python.engine.types.enums import EventType
 from order_book_python.engine.types.events import Event
-from order_book_python.engine.types.instruments import Instrument
 from order_book_python.simulation.clock import SimulationClock
 from order_book_python.simulation.config import SimulationConfig
 from order_book_python.simulation.runner import SimulationRunner
