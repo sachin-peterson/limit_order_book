@@ -1,13 +1,13 @@
 # Python Limit Order Book
 
-A Python implementation of an exchange-style limit order book with a stochastic order-flow simulator and terminal dashboard.
+A Python implementation of a limit order book, matching engine, stochastic order-flow simulator, and terminal dashboard
 
 ## Requirements
 
 - Python 3.10 or later
-- A terminal that supports `curses`
+- A terminal with `curses` support
 
-The dashboard uses only the Python standard library. On Windows, run it through WSL or another terminal environment that supports `curses`.
+The project uses only the Python standard library at runtime.
 
 ## Setup
 
@@ -28,13 +28,18 @@ source .venv/bin/activate
 Install the project:
 
 ```bash
-python3 -m pip install --upgrade pip
+make install
+```
+
+You can also install it directly:
+
+```bash
 python3 -m pip install -e .
 ```
 
 ## Run the dashboard
 
-Run the command from the repository root:
+From the repository root:
 
 ```bash
 python3 -m order_book_python.cli.run_dashboard \
@@ -45,55 +50,32 @@ python3 -m order_book_python.cli.run_dashboard \
     --depth 5
 ```
 
-Dashboard controls:
-
-- `P`: pause or resume the simulation
-- `C`: clear the event stream
-- `Q`: quit
-
-The terminal must be at least 90 columns wide and 20 rows high.
-
-You can also use the Makefile:
+Or use:
 
 ```bash
 make dashboard
 ```
 
-Command-line options are available with:
+The Makefile arguments can be overridden:
 
 ```bash
-python3 -m order_book_python.cli.run_dashboard --help
-```
-
-## Run without the dashboard
-
-To print generated events and the final order-book snapshot directly to the terminal:
-
-```bash
-python3 -m order_book_python.cli.run_simulation \
-    --actions 1000 \
-    --seed 42 \
-    --validate
-```
-
-Or use:
-
-```bash
-make simulation
+make dashboard ACTIONS=500 SEED=10 REQUEST_DELAY=0.5 DEPTH=10
 ```
 
 ## Run the tests
 
-Install the development dependencies and run the test suite:
+The tests use Python's built-in `unittest` module. No testing dependency is required.
 
 ```bash
-python3 -m pip install -e ".[dev]"
-python3 -m pytest order_book_python/tests
+make test
 ```
 
-Or use:
+Equivalent command:
 
 ```bash
-make install-dev
-make test
+python3 -m unittest discover \
+    -s order_book_python/tests \
+    -t . \
+    -p "test_*.py" \
+    -v
 ```
