@@ -40,6 +40,7 @@ class SimulationRunner:
             instrument=instrument,
             clock=self.clock
         )
+
         generator = StochasticRequestGenerator(config)
 
         for _ in range(config.action_count):
@@ -63,12 +64,13 @@ class SimulationRunner:
             if on_step is not None:
                 on_step(order_book)
 
-        if on_step is not None:
-            on_step(order_book)
-
         return order_book
 
-    def process_request(self, order_book: OrderBook, request: SimulationRequest) -> None:
+    def process_request(
+        self,
+        order_book: OrderBook,
+        request: SimulationRequest
+    ) -> None:
         if isinstance(request, NewOrderRequest):
             order_book.submit_order(request)
             return
