@@ -1,16 +1,14 @@
 # Limit Order Book
 
-A from-scratch exchange-style limit order book and matching engine built to study order matching, market microstructure and performance-oriented systems design.
+A from-scratch exchange-style limit order book, matching engine, and stochastic simulator.
 
 ![Limit order book dashboard](docs/assets/dashboard.gif)
 
-The current implementation is written in Python and includes the matching engine, stochastic order-flow simulator, state validation, tests and an interactive terminal dashboard.
-
-A Rust implementation of the core matching engine is planned for correctness and performance comparison.
+The reference implementation is written in Python. A low-latency Rust implementation of the core matching engine is in progress. 
 
 ## Features
 
-- Price-time priority matching
+- Price-time priority order matching
 - Limit and market orders
 - GTC, IOC and FOK time-in-force instructions
 - Order submission, cancellation and modification
@@ -243,6 +241,6 @@ The current simulator is a synthetic baseline. It is not yet calibrated to empir
 
 ## Research direction
 
-The longer-term goal is to use real event-level market data to evaluate how different order-flow assumptions affect simulated order-book behaviour.
+The long-term goal is to use real event-level market data to evaluate how different order-flow assumptions affect simulated order-book behaviour.
 
 The existing stochastic simulator will serve as the baseline for comparison with empirically calibrated and state-dependent models.
