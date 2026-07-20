@@ -232,7 +232,7 @@ The current simulator is a synthetic baseline. It is not yet calibrated to empir
 - Synthetic order flow rather than empirically calibrated order flow
 - Intended for study and experimentation rather than production trading
 
-## Roadmap
+## To-do
 
 1. Add deterministic Python engine benchmarks
 2. Benchmark common and worst-case book shapes
